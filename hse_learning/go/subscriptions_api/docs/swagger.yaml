@@ -1,0 +1,229 @@
+basePath: /
+definitions:
+  models.Credentials:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.LoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  models.Note:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      user_id:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API для управления заметками (CRUD + аутентификация)
+  title: Note API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Возвращает JWT по имени и паролю
+      parameters:
+      - description: Имя пользователя и пароль
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.Credentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+        "400":
+          description: Неверный формат данных
+          schema:
+            type: string
+        "401":
+          description: Пользователь не найден или неверный пароль
+          schema:
+            type: string
+      summary: Авторизация
+      tags:
+      - auth
+  /notes:
+    get:
+      description: Получает все заметки текущего пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Note'
+            type: array
+        "401":
+          description: Неавторизованный запрос
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Получить заметки
+      tags:
+      - notes
+    post:
+      consumes:
+      - application/json
+      description: Добавляет заметку для текущего пользователя
+      parameters:
+      - description: Заметка
+        in: body
+        name: note
+        required: true
+        schema:
+          $ref: '#/definitions/models.Note'
+      produces:
+      - text/plain
+      responses:
+        "201":
+          description: Заметка успешно создана
+          schema:
+            type: string
+        "400":
+          description: Неверный формат данных
+          schema:
+            type: string
+        "401":
+          description: Неавторизованный запрос
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Создать заметку
+      tags:
+      - notes
+  /notes/{id}:
+    delete:
+      description: Удаляет заметку по ID, если она принадлежит пользователю
+      parameters:
+      - description: ID заметки
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Заметка удалена
+          schema:
+            type: string
+        "401":
+          description: Неавторизованный запрос
+          schema:
+            type: string
+        "404":
+          description: Заметка не найдена или нет доступа
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Удалить заметку
+      tags:
+      - notes
+    put:
+      consumes:
+      - application/json
+      description: Обновляет заголовок и содержимое заметки по ID
+      parameters:
+      - description: ID заметки
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Обновлённая заметка
+        in: body
+        name: note
+        required: true
+        schema:
+          $ref: '#/definitions/models.Note'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Заметка обновлена
+          schema:
+            type: string
+        "400":
+          description: Неверный формат данных
+          schema:
+            type: string
+        "401":
+          description: Неавторизованный запрос
+          schema:
+            type: string
+        "404":
+          description: Заметка не найдена или нет доступа
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Обновить заметку
+      tags:
+      - notes
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт нового пользователя с логином и паролем
+      parameters:
+      - description: Имя пользователя и пароль
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.Credentials'
+      produces:
+      - text/plain
+      responses:
+        "201":
+          description: Пользователь успешно зарегистрирован
+          schema:
+            type: string
+        "400":
+          description: Неверный формат данных
+          schema:
+            type: string
+        "409":
+          description: Пользователь с таким именем уже существует
+          schema:
+            type: string
+      summary: Регистрация
+      tags:
+      - auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

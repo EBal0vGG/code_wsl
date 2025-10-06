@@ -1,0 +1,17 @@
+services:
+  test-db:
+    image: postgres:13
+    container_name: note_api_test_db
+    environment:
+      POSTGRES_DB: note_api_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"  # Другой порт, чтобы не конфликтовать с основной БД
+    volumes:
+      - ./db.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5 
